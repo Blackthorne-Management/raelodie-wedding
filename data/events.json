@@ -1,0 +1,65 @@
+{
+  "welcome-reception": {
+    "title": "Welcome Reception",
+    "dateLabel": "Friday, May 7, 2027",
+    "timeLabel": "Evening — time TBD",
+    "location": "The Grove Resort & Water Park, Winter Garden, FL",
+    "dressCode": "Garden formal, resort-casual — coral, blush, peach, champagne, or white/ivory.",
+    "public": true,
+    "fields": ["notes"]
+  },
+  "wedding-reception": {
+    "title": "Wedding Ceremony and Reception",
+    "dateLabel": "Saturday, May 8, 2027",
+    "timeLabel": "4:00 PM — time TBD to confirm",
+    "location": "The Grove Resort & Water Park, Winter Garden, FL",
+    "dressCode": "Garden formal — coral, blush, peach, champagne, or white/ivory. No emerald, black/dark tones, or neons.",
+    "public": true,
+    "fields": ["mealChoice", "kosherMeal", "kidsMeal", "notes"]
+  },
+  "kosher-brunch": {
+    "title": "Kosher Brunch",
+    "dateLabel": "Sunday, May 9, 2027",
+    "timeLabel": "Morning — time TBD",
+    "location": "The Grove Resort & Water Park, Winter Garden, FL",
+    "dressCode": "Casual and comfortable.",
+    "public": false,
+    "fields": ["notes"]
+  },
+  "rehearsal-dinner": {
+    "title": "Rehearsal Dinner",
+    "dateLabel": "Thursday, May 6, 2027",
+    "timeLabel": "Evening — time TBD",
+    "location": "TBD",
+    "dressCode": "Dressy casual.",
+    "public": false,
+    "fields": ["mealChoice", "notes"]
+  },
+  "ring-benediction": {
+    "title": "Ring Benediction",
+    "dateLabel": "TBD",
+    "timeLabel": "TBD",
+    "location": "TBD",
+    "dressCode": "TBD",
+    "public": false,
+    "fields": ["notes"]
+  },
+  "disney-bachelorette": {
+    "title": "Disney Bachelorette",
+    "dateLabel": "TBD",
+    "timeLabel": "TBD",
+    "location": "Walt Disney World",
+    "dressCode": "Park-casual.",
+    "public": false,
+    "fields": ["notes"]
+  },
+  "bachelor-shenanigans": {
+    "title": "Rael's Bachelor Shenanigans",
+    "dateLabel": "TBD",
+    "timeLabel": "TBD",
+    "location": "TBD",
+    "dressCode": "Casual.",
+    "public": false,
+    "fields": ["notes"]
+  }
+}

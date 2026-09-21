@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Elodie Jean-Philippe",
+    "events": ["ring-benediction", "rehearsal-dinner", "welcome-reception", "wedding-reception", "kosher-brunch"]
+  },
+  {
+    "name": "Nathaniel Rodriguez",
+    "events": ["ring-benediction", "rehearsal-dinner", "welcome-reception", "wedding-reception", "kosher-brunch"]
+  },
+  {
+    "name": "Karla Colley",
+    "events": ["welcome-reception", "wedding-reception", "kosher-brunch"]
+  }
+]
