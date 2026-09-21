@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Ro·dez·vous — Elodie & Rael, May 8 2027
+   Ro · dez · vous | Elodie & Rael, May 8 2027
    Shared design system
    ========================================================================== */
 
@@ -79,6 +79,7 @@ h3 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
   font-weight: 400;
   color: var(--plum);
   font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  word-spacing: 0.25em;
 }
 
 p { margin: 0 0 1em; color: var(--ink-soft); }
@@ -150,6 +151,7 @@ p { margin: 0 0 1em; color: var(--ink-soft); }
   color: var(--beetroot);
   text-decoration: none;
   line-height: 1;
+  word-spacing: 0.4em; /* keeps the dots in Ro · dez · vous from blending into the script letters */
 }
 
 .nav-links {
@@ -286,6 +288,10 @@ section { padding: 72px 0; }
 .band-fern h2, .band-fern h3, .band-fern .eyebrow, .band-fern .script-lg { color: #fff; }
 .band-fern .eyebrow { color: #d7e7c3; }
 .band-fern p { color: rgba(255, 255, 255, 0.86); }
+/* Cards sit on a cream/paper surface, so keep their text dark inside the green band */
+.band-fern .card { color: var(--ink); }
+.band-fern .card h3 { color: var(--beetroot); }
+.band-fern .card p { color: var(--ink-soft); }
 
 .band-plum {
   background: linear-gradient(135deg, var(--plum), var(--beetroot));
@@ -356,6 +362,8 @@ section { padding: 72px 0; }
   padding: 26px 0;
 }
 .faq-item h3 { font-family: var(--font-script); font-size: 1.7rem; color: var(--honeysuckle); margin-bottom: 8px; }
+.faq-day { margin-top: 14px; }
+.faq-day p { margin: 4px 0 0; }
 
 /* ---------- timeline (schedule) ---------- */
 .timeline { list-style: none; margin: 0; padding: 0; }
@@ -413,6 +421,15 @@ section { padding: 72px 0; }
   box-shadow: var(--shadow);
 }
 .team-photo .photo-placeholder { border-radius: 50%; }
+.group-photo {
+  max-width: 820px;
+  margin: 40px auto 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.group-photo .photo-placeholder { aspect-ratio: 16 / 9; }
+.group-photo img { width: 100%; }
 
 /* ---------- RSVP ---------- */
 .rsvp-search {
@@ -523,7 +540,8 @@ section { padding: 72px 0; }
 }
 .footer-links a { text-decoration: none; }
 .footer-links a:hover { text-decoration: underline; }
-.fine { font-size: 0.78rem; opacity: 0.7; margin-top: 18px; }
+.fine { font-size: 0.78rem; margin-top: 18px; color: rgba(255, 255, 255, 0.85); }
+.fine a { color: inherit; }
 
 /* ---------- misc ---------- */
 .divider {

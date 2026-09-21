@@ -16,7 +16,7 @@ function initNavToggle() {
   });
 }
 
-// Wedding date/time — update WEDDING_DATETIME once ceremony time is finalized.
+// Wedding date/time: update WEDDING_DATETIME once ceremony time is finalized.
 const WEDDING_DATETIME = '2027-05-08T16:00:00-04:00';
 
 function initCountdown() {

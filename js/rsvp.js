@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!invited.length) {
       formArea.innerHTML =
-        '<p class="rsvp-status err">We have you on the list, but no events are attached yet — reach out to the couple and we\'ll sort it out.</p>';
+        '<p class="rsvp-status err">We have you on the list, but no events are attached yet. Reach out to the couple and we\'ll sort it out.</p>';
       return;
     }
 
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
       .then(() => {
         resultBox.innerHTML =
-          '<p class="rsvp-status ok">You\'re all set — thank you for RSVPing! We can\'t wait to celebrate with you.</p>';
+          '<p class="rsvp-status ok">You\'re all set, thank you for RSVPing! We can\'t wait to celebrate with you.</p>';
         form.querySelector('button[type="submit"]').disabled = true;
       })
       .catch(() => {
