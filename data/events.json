@@ -1,30 +1,12 @@
 {
-  "welcome-reception": {
-    "title": "Welcome Reception",
-    "dateLabel": "Friday, May 7, 2027",
-    "timeLabel": "6:00 PM - 9:00 PM",
-    "location": "The Grove Resort, Winter Garden, FL",
-    "dressCode": "Island Glam. Upscale resort wear, but fun! Satins, silks, and metallics. Any color goes. Barefoot or shoes you don't mind getting sandy.",
-    "public": true,
-    "fields": ["notes"]
-  },
-  "wedding-reception": {
-    "title": "Wedding Ceremony",
-    "dateLabel": "Saturday, May 8, 2027",
-    "timeLabel": "4:00 PM, with Cocktail Hour and Reception to follow",
-    "location": "The Grove Resort, Winter Garden, FL",
-    "dressCode": "Garden Formal. Coral, blush, peach, champagne, or white/ivory. No emerald, black/dark tones, or neons.",
-    "public": true,
-    "fields": ["mealChoice", "kosherMeal", "kidsMeal", "notes"]
-  },
-  "kosher-brunch": {
-    "title": "Kosher Brunch",
-    "dateLabel": "Sunday, May 9, 2027",
-    "timeLabel": "Morning, time TBD",
-    "location": "The Grove Resort, Winter Garden, FL",
-    "dressCode": "Casual and comfortable.",
+  "ring-benediction": {
+    "title": "Ring Benediction",
+    "dateLabel": "TBD",
+    "timeLabel": "TBD",
+    "location": "TBD",
+    "dressCode": "TBD",
     "public": false,
-    "fields": ["notes"]
+    "fields": []
   },
   "rehearsal-dinner": {
     "title": "Rehearsal Dinner",
@@ -33,16 +15,7 @@
     "location": "TBD",
     "dressCode": "Dressy casual.",
     "public": false,
-    "fields": ["mealChoice", "notes"]
-  },
-  "ring-benediction": {
-    "title": "Ring Benediction",
-    "dateLabel": "TBD",
-    "timeLabel": "TBD",
-    "location": "TBD",
-    "dressCode": "TBD",
-    "public": false,
-    "fields": ["notes"]
+    "fields": ["mealChoice"]
   },
   "disney-bachelorette": {
     "title": "Disney Bachelorette",
@@ -51,7 +24,7 @@
     "location": "Walt Disney World",
     "dressCode": "Park-casual.",
     "public": false,
-    "fields": ["notes"]
+    "fields": []
   },
   "bachelor-shenanigans": {
     "title": "Rael's Bachelor Shenanigans",
@@ -60,6 +33,33 @@
     "location": "TBD",
     "dressCode": "Casual.",
     "public": false,
-    "fields": ["notes"]
+    "fields": []
+  },
+  "welcome-reception": {
+    "title": "Welcome Reception",
+    "dateLabel": "Friday, May 7, 2027",
+    "timeLabel": "6:00 PM - 9:00 PM",
+    "location": "The Grove Resort, Winter Garden, FL",
+    "dressCode": "Island Glam. Upscale resort wear, but fun! Satins, silks, and metallics. Any color goes. Barefoot or shoes you don't mind getting sandy.",
+    "public": true,
+    "fields": []
+  },
+  "wedding-reception": {
+    "title": "Wedding Ceremony & Reception",
+    "dateLabel": "Saturday, May 8, 2027",
+    "timeLabel": "4:00 PM, with Cocktail Hour and Reception to follow",
+    "location": "The Grove Resort, Winter Garden, FL",
+    "dressCode": "Garden Formal. Coral, blush, peach, champagne, or white/ivory. No emerald, black/dark tones, or neons.",
+    "public": true,
+    "fields": ["mealChoice", "kosherMeal"]
+  },
+  "kosher-brunch": {
+    "title": "Kosher Brunch",
+    "dateLabel": "Sunday, May 9, 2027",
+    "timeLabel": "Morning, time TBD",
+    "location": "The Grove Resort, Winter Garden, FL",
+    "dressCode": "Casual and comfortable.",
+    "public": false,
+    "fields": []
   }
 }

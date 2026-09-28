@@ -1,4 +1,5 @@
 // RSVP admin page: Supabase Auth sign-in -> admin_rsvp_overview() -> totals + table + CSV.
+// One row per person per invited event; email and notes are per household.
 // Supabase Auth signs in by email, so usernames map to an account email here.
 // Access is enforced in the database: only users in public.admin_users can read RSVPs.
 
@@ -142,14 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
       ? list
           .map((r) => `
             <tr class="resp-${r.response === 'no response' ? 'none' : r.response}">
+              <td>${escapeHtml(r.household)}</td>
               <td>${escapeHtml(r.name)}</td>
               <td>${escapeHtml(eventTitle(r.event_key))}</td>
               <td>${escapeHtml(r.response)}</td>
-              <td>${escapeHtml(MEAL_LABELS[r.meal_choice] || r.meal_choice || '')}</td>
+              <td>${r.kids_meal ? "Kids' meal" : escapeHtml(MEAL_LABELS[r.meal_choice] || r.meal_choice || '')}</td>
               <td>${r.kosher_meal ? 'Yes' : ''}</td>
-              <td>${r.kids_meal ? `Yes${r.kids_ages ? ` (${escapeHtml(r.kids_ages)})` : ''}` : ''}</td>
-              <td>${escapeHtml(r.notes || '')}</td>
               <td>${escapeHtml(r.email || '')}</td>
+              <td>${escapeHtml(r.notes || '')}</td>
               <td>${r.updated_at ? new Date(r.updated_at).toLocaleDateString() : ''}</td>
             </tr>`)
           .join('')
@@ -157,17 +158,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function downloadCsv() {
-    const header = ['Guest', 'Event', 'Response', 'Meal', 'Kosher', "Kids' meal", 'Kids ages', 'Notes', 'Email', 'Updated'];
+    const header = ['Household', 'Guest', 'Event', 'Response', 'Meal', 'Kosher', 'Email', 'Notes', 'Updated'];
     const lines = visibleRows().map((r) => [
+      r.household,
       r.name,
       eventTitle(r.event_key),
       r.response,
-      MEAL_LABELS[r.meal_choice] || r.meal_choice || '',
+      r.kids_meal ? "Kids' meal" : MEAL_LABELS[r.meal_choice] || r.meal_choice || '',
       r.kosher_meal ? 'Yes' : '',
-      r.kids_meal ? 'Yes' : '',
-      r.kids_ages || '',
-      r.notes || '',
       r.email || '',
+      r.notes || '',
       r.updated_at || '',
     ]);
     const csv = [header, ...lines]

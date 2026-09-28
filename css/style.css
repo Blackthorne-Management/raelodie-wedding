@@ -497,6 +497,7 @@ section { padding: 72px 0; }
 .field input[type="text"],
 .field input[type="number"],
 .field input[type="password"],
+.field input[type="email"],
 .field textarea {
   width: 100%;
   padding: 11px 14px;
@@ -509,6 +510,42 @@ section { padding: 72px 0; }
 }
 .radio-row { display: flex; gap: 18px; flex-wrap: wrap; }
 .radio-row label { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+
+.field label.check { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+
+.party-list { list-style: none; margin: 0; padding: 0; }
+.party-list li { padding: 8px 0; border-bottom: 1px solid var(--line); font-weight: 700; }
+.party-list li:last-child { border-bottom: none; }
+.plus-one { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.plus-one input {
+  flex: 1;
+  min-width: 180px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  font-family: var(--font-body);
+  font-weight: 600;
+  background: #fff;
+  color: var(--ink);
+}
+.party-hint { font-size: 0.86rem; color: var(--ink-soft); margin: 10px 0 0; }
+
+.person-row {
+  border-top: 1px solid var(--line);
+  padding: 14px 0 4px;
+  margin-top: 10px;
+}
+.person-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 18px;
+  margin-bottom: 10px;
+}
+.person-name { font-weight: 700; color: var(--beetroot); }
+.person-extras { padding-left: 14px; border-left: 3px solid var(--beige); }
+.person-row.missing .person-name::after { content: ' ← please answer'; color: var(--fiesta); font-weight: 600; font-size: 0.86rem; }
 
 .rsvp-status {
   padding: 14px 18px;
@@ -562,9 +599,9 @@ section { padding: 72px 0; }
 .admin-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
 .admin-table th { font-weight: 700; color: var(--fern); white-space: nowrap; }
 .admin-table tr:last-child td { border-bottom: none; }
-.admin-table .resp-yes td:nth-child(3) { color: #3e5a22; font-weight: 700; }
-.admin-table .resp-no td:nth-child(3) { color: var(--fiesta); font-weight: 700; }
-.admin-table .resp-none td:nth-child(3) { color: var(--ink-soft); }
+.admin-table .resp-yes td:nth-child(4) { color: #3e5a22; font-weight: 700; }
+.admin-table .resp-no td:nth-child(4) { color: var(--fiesta); font-weight: 700; }
+.admin-table .resp-none td:nth-child(4) { color: var(--ink-soft); }
 
 /* ---------- footer ---------- */
 .site-footer {

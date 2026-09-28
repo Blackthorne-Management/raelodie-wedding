@@ -42,19 +42,22 @@ Search the site for `[TO ADD]`, `[TBD]`, `[XX]`, or the dashed orange "placehold
 
 ## Guest list & RSVP
 
-The guest list and RSVPs live in Supabase (Blackthorne-Management's Org → project `mawdkpwegsjmdqoagevi`), not in this repo, so the invite list isn't publicly downloadable.
+The guest list and RSVPs live in Supabase (Blackthorne-Management's Org → project `mawdkpwegsjmdqoagevi`), not in this repo, so the invite list isn't publicly downloadable. It was loaded from the "JPR Guest List" / "JPR Event List" spreadsheets: 138 households, 308 people (44 unnamed plus-ones). Only names and event invitations were imported, no addresses or phone numbers.
 
-- **`guests`** — who's invited to what. Add/edit rows in the Supabase Table Editor. `name` is what guests type to find themselves; `events` is a list of event keys, e.g. `{welcome-reception,wedding-reception}`. Keys must match `data/events.json`. Currently only 3 demo guests (Elodie, Rael, sample guest "Karla Colley") — **replace with the real guest list** before sharing the site.
-- **`rsvps`** — one row per guest per event. Resubmitting updates the existing row instead of duplicating.
-- **`rsvp_overview`** — every invite with its response (`yes` / `no` / `no response`), meal choice, notes, etc. Use this view for headcounts; export to CSV from the Table Editor.
+- **`households`**: one row per invitation (e.g. "Amanda Rodriguez & Taion Walters"). Also stores the household's RSVP email and notes.
+- **`guests`**: one row per person, linked to a household. `events` lists the event keys that person is invited to, e.g. `{welcome-reception,wedding-reception}` (keys must match `data/events.json`). Plus-ones have `is_plus_one = true` and name `Guest`; they can't be searched for, and the household fills in their name when RSVPing. `search_text` is the lowercase name without accents or quotes, used for search. If you add someone by hand, set it too.
+- **`rsvps`**: one row per person per event. Resubmitting updates the existing rows instead of duplicating.
+- **`rsvp_overview`**: every person × invited event with their response (`yes` / `no` / `no response`), meal, kosher, household email and notes. Export to CSV from the Table Editor, or use the admin page.
 
-The site's public key can only call three database functions (`search_guests`, `get_guest_events`, `submit_rsvp`); it can't read the tables. Name search needs at least 3 characters and returns at most 6 matches. RSVPs work locally too, as long as the page is served over http (not opened as a file).
+**How the RSVP page works:** a guest types at least 3 letters of any part of their name (accents and nicknames don't matter). Picking their name brings up their whole household, and each event shows only the people invited to it. For example, Amanda and Taion both see the Ring Benediction, but only Amanda sees the Rehearsal Dinner and only Taion sees Rael's Bachelor Shenanigans. Meal choice (including a kids' meal option) is asked per person for events that have `mealChoice` in `data/events.json`; kosher is asked per person where `kosherMeal` is listed.
+
+The site's public key can only call three database functions (`search_guests`, `get_household`, `submit_rsvp`). It can't read the tables, and a submission is rejected if it includes someone outside the household or an event they aren't invited to.
 
 ### Admin page & email alerts
 
 `/admin.html` shows totals per event (yes / no / waiting, meal counts, kosher, kids' meals), the full RSVP list, and a CSV download. Sign-in uses Supabase Auth: the username `Raelodie` maps to the account `raelodiehome@gmail.com` (see `ADMIN_ACCOUNTS` in `js/admin.js`), and only accounts listed in the `admin_users` table can read RSVPs.
 
-Each RSVP calls the `rsvp-notify` Edge Function, which emails a summary. It stays silent until these Edge Function secrets are set in Supabase: `RESEND_API_KEY` (from resend.com) and `NOTIFY_EMAIL` (where alerts go).
+Each RSVP calls the `rsvp-notify` Edge Function, which emails one summary per household submission. It stays silent until these Edge Function secrets are set in Supabase: `RESEND_API_KEY` (from resend.com) and `NOTIFY_EMAIL` (where alerts go).
 
 ## Deploying
 

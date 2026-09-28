@@ -1,8 +1,19 @@
-// RSVP page logic: name lookup -> per-event dynamic form -> Supabase submit.
-// Guest list + RSVPs live in Supabase (see js/supabase-config.js). The public
-// key can only call the search_guests / get_guest_events / submit_rsvp
-// functions; the tables themselves are not readable from the site.
-// Event definitions live in data/events.json (per-event display + which fields to ask for).
+// RSVP page logic: name lookup -> whole household's per-person, per-event form -> Supabase submit.
+// Guests belong to households (see js/supabase-config.js for the project). Finding any
+// named member brings up everyone in the household, each with only the events they're
+// invited to. The public key can only call search_guests / get_household / submit_rsvp;
+// the tables themselves are not readable from the site.
+// Event definitions live in data/events.json (display order, details, and which
+// per-person fields to ask for: "mealChoice", "kosherMeal").
+
+const MEAL_OPTIONS = [
+  ['chicken', 'Herb Chicken'],
+  ['fish', 'Citrus Fish'],
+  ['beef', 'Braised Beef'],
+  ['vegetarian', 'Garden Vegetarian'],
+  ['vegan', 'Vegan'],
+  ['kids', "Kids' meal"],
+];
 
 function rpc(fn, args) {
   return fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
@@ -17,6 +28,11 @@ function rpc(fn, args) {
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+// Match how names are stored for search: no accents, no quotes, lowercase.
+function normalizeQuery(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/["'`]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
   searchInput.addEventListener('input', () => {
-    const q = searchInput.value.trim();
+    const q = normalizeQuery(searchInput.value);
     formArea.innerHTML = '';
     notFound.hidden = true;
     clearTimeout(searchTimer);
@@ -84,8 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   suggestionsBox.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-idx]');
     if (!btn) return;
-    const guest = matches[Number(btn.dataset.idx)];
-    selectGuest(guest);
+    selectGuest(matches[Number(btn.dataset.idx)]);
   });
 
   document.addEventListener('click', (e) => {
@@ -94,37 +109,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  function selectGuest(guest) {
-    searchInput.value = guest.name;
+  function selectGuest(match) {
+    searchInput.value = match.name;
     suggestionsBox.hidden = true;
     notFound.hidden = true;
     formArea.innerHTML = '<p class="lede center">Looking up your invitation…</p>';
 
-    rpc('get_guest_events', { p_guest_id: guest.id })
-      .then((guestEvents) => renderForm(guest, guestEvents || []))
+    rpc('get_household', { p_household_id: match.household_id })
+      .then((members) => renderForm(match, members || []))
       .catch(() => {
         formArea.innerHTML =
           '<p class="rsvp-status err">We could not load your invitation right now. Please refresh and try again.</p>';
       });
   }
 
-  function renderForm(guest, guestEvents) {
-    const invited = guestEvents.filter((key) => events[key]);
+  function renderForm(match, members) {
+    // events.json order is the display order; only show events someone here is invited to.
+    const eventKeys = Object.keys(events).filter((key) => members.some((m) => m.events.includes(key)));
 
-    if (!invited.length) {
+    if (!eventKeys.length) {
       formArea.innerHTML =
         '<p class="rsvp-status err">We have you on the list, but no events are attached yet. Reach out to the couple and we\'ll sort it out.</p>';
       return;
     }
 
+    const firstName = match.name.split(' ')[0];
+    const hasPlusOnes = members.some((m) => m.is_plus_one);
+
     formArea.innerHTML = `
-      <form data-rsvp-form>
-        <p class="lede center">Hi ${escapeHtml(guest.name)}! Here's what you're invited to. Let us know if you'll be there.</p>
-        ${invited.map((key) => renderEventCard(key, events[key])).join('')}
-        <div class="field">
-          <label for="rsvp-email">Your email (so we can reach you with any updates)</label>
-          <input type="text" id="rsvp-email" name="rsvp_email" required />
+      <form data-rsvp-form novalidate>
+        <p class="lede center">Hi ${escapeHtml(firstName)}! ${
+          members.length > 1
+            ? "Here's everyone in your party and what each of you is invited to. You can RSVP for the whole group."
+            : "Here's what you're invited to. Let us know if you'll be there."
+        }</p>
+
+        <div class="event-card party-card">
+          <h3>Your party</h3>
+          <ul class="party-list">
+            ${members.map((m) => `<li>${renderPartyMember(m)}</li>`).join('')}
+          </ul>
+          ${hasPlusOnes ? '<p class="party-hint">Bringing a guest? Add their name so we can make a place card.</p>' : ''}
         </div>
+
+        ${eventKeys.map((key) => renderEventCard(key, events[key], members)).join('')}
+
+        <div class="event-card">
+          <div class="field">
+            <label for="rsvp-email">Your email (so we can reach you with any updates)</label>
+            <input type="email" id="rsvp-email" name="rsvp_email" required />
+          </div>
+          <div class="field">
+            <label for="rsvp-notes">Anything else we should know? (allergies, accessibility needs, etc.)</label>
+            <textarea id="rsvp-notes" name="rsvp_notes" rows="3"></textarea>
+          </div>
+        </div>
+
         <div class="center">
           <button type="submit" class="btn btn-primary">Send RSVP</button>
         </div>
@@ -133,138 +173,155 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     const form = formArea.querySelector('[data-rsvp-form]');
-    form.addEventListener('submit', (e) => handleSubmit(e, guest, invited));
-    wireConditionalFields(form);
+    form.addEventListener('submit', (e) => handleSubmit(e, match, members, eventKeys));
+    wireForm(form);
   }
 
-  function renderEventCard(key, event) {
+  function renderPartyMember(m) {
+    if (!m.is_plus_one) return escapeHtml(m.name);
+    return `
+      <label class="plus-one">
+        <span>Guest</span>
+        <input type="text" name="plusName__${m.guest_id}" data-plus-name="${m.guest_id}" placeholder="Guest's name (optional)" maxlength="100">
+      </label>`;
+  }
+
+  function renderEventCard(key, event, members) {
+    const invited = members.filter((m) => m.events.includes(key));
     return `
       <div class="event-card" data-event-key="${key}">
-        <h3>${event.title}</h3>
-        <p><strong>${event.dateLabel}</strong> &middot; ${event.timeLabel}<br>${event.location}</p>
-        ${event.dressCode ? `<p><em>Dress code: ${event.dressCode}</em></p>` : ''}
-
-        <div class="field">
-          <label>Will you attend?</label>
-          <div class="radio-row">
-            <label><input type="radio" name="attending__${key}" value="yes" required> Joyfully yes</label>
-            <label><input type="radio" name="attending__${key}" value="no" required> Sadly can't make it</label>
-          </div>
-        </div>
-
-        ${renderExtraFields(key, event)}
+        <h3>${escapeHtml(event.title)}</h3>
+        <p><strong>${escapeHtml(event.dateLabel)}</strong> &middot; ${escapeHtml(event.timeLabel)}<br>${escapeHtml(event.location)}</p>
+        ${event.dressCode ? `<p><em>Dress code: ${escapeHtml(event.dressCode)}</em></p>` : ''}
+        ${invited.map((m) => renderPersonRow(key, event, m)).join('')}
       </div>
     `;
   }
 
-  function renderExtraFields(key, event) {
+  function renderPersonRow(key, event, m) {
     const fields = event.fields || [];
-    let html = '';
+    const id = `${m.guest_id}__${key}`;
+    let extras = '';
 
     if (fields.includes('mealChoice')) {
-      html += `
-        <div class="field" data-attending-only>
-          <label for="meal__${key}">Meal choice</label>
-          <select id="meal__${key}" name="mealChoice__${key}">
+      extras += `
+        <div class="field">
+          <label for="meal__${id}">Meal choice</label>
+          <select id="meal__${id}" name="meal__${id}" data-meal>
             <option value="">Select one</option>
-            <option value="chicken">Herb Chicken</option>
-            <option value="fish">Citrus Fish</option>
-            <option value="beef">Braised Beef</option>
-            <option value="vegetarian">Garden Vegetarian</option>
-            <option value="vegan">Vegan</option>
+            ${MEAL_OPTIONS.map(([v, label]) => `<option value="${v}">${label}</option>`).join('')}
           </select>
         </div>`;
     }
-
     if (fields.includes('kosherMeal')) {
-      html += `
-        <div class="field" data-attending-only>
-          <label>Need a kosher meal?</label>
-          <div class="radio-row">
-            <label><input type="radio" name="kosherMeal__${key}" value="yes"> Yes, please</label>
-            <label><input type="radio" name="kosherMeal__${key}" value="no" checked> No thanks</label>
-          </div>
+      extras += `
+        <div class="field">
+          <label class="check"><input type="checkbox" name="kosher__${id}" value="yes"> Needs a kosher meal</label>
         </div>`;
     }
 
-    if (fields.includes('kidsMeal')) {
-      html += `
-        <div class="field" data-attending-only>
-          <label>Bringing a child who needs a kids' meal?</label>
+    return `
+      <div class="person-row" data-person-row>
+        <div class="person-head">
+          <span class="person-name" ${m.is_plus_one ? `data-plus-label="${m.guest_id}"` : ''}>${escapeHtml(m.is_plus_one ? 'Your guest' : m.name)}</span>
           <div class="radio-row">
-            <label><input type="radio" name="kidsMeal__${key}" value="yes" data-kids-toggle="${key}"> Yes</label>
-            <label><input type="radio" name="kidsMeal__${key}" value="no" data-kids-toggle="${key}" checked> No</label>
+            <label><input type="radio" name="att__${id}" value="yes"> Joyfully yes</label>
+            <label><input type="radio" name="att__${id}" value="no"> Sadly can't make it</label>
           </div>
         </div>
-        <div class="field" data-kids-age="${key}" hidden>
-          <label for="kidsAge__${key}">Child's age(s)</label>
-          <input type="text" id="kidsAge__${key}" name="kidsAge__${key}" placeholder="e.g. 4 and 7">
-        </div>`;
-    }
-
-    if (fields.includes('notes')) {
-      html += `
-        <div class="field">
-          <label for="notes__${key}">Anything else we should know? (allergies, accessibility needs, etc.)</label>
-          <textarea id="notes__${key}" name="notes__${key}" rows="2"></textarea>
-        </div>`;
-    }
-
-    return html;
+        ${extras ? `<div class="person-extras" data-attending-only hidden>${extras}</div>` : ''}
+      </div>
+    `;
   }
 
-  function wireConditionalFields(form) {
-    form.querySelectorAll('[data-kids-toggle]').forEach((radio) => {
+  function wireForm(form) {
+    // Per-person meal/kosher fields only appear once that person says yes.
+    form.querySelectorAll('input[name^="att__"]').forEach((radio) => {
       radio.addEventListener('change', () => {
-        const key = radio.dataset.kidsToggle;
-        const ageField = form.querySelector(`[data-kids-age="${key}"]`);
-        if (ageField) ageField.hidden = radio.value !== 'yes';
+        const row = radio.closest('[data-person-row]');
+        const extras = row.querySelector('[data-attending-only]');
+        if (extras) extras.hidden = radio.value !== 'yes';
+        row.classList.remove('missing');
       });
     });
 
-    form.querySelectorAll('input[name^="attending__"]').forEach((radio) => {
-      radio.addEventListener('change', () => {
-        const card = radio.closest('.event-card');
-        const attendingNo = card.querySelector('input[name^="attending__"][value="no"]').checked;
-        card.querySelectorAll('[data-attending-only]').forEach((f) => {
-          f.style.opacity = attendingNo ? 0.4 : 1;
+    // Show the plus-one's name in each event once it's typed.
+    form.querySelectorAll('[data-plus-name]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const name = input.value.trim() || 'Your guest';
+        form.querySelectorAll(`[data-plus-label="${input.dataset.plusName}"]`).forEach((el) => {
+          el.textContent = name;
         });
       });
     });
   }
 
-  function handleSubmit(e, guest, invited) {
+  function handleSubmit(e, match, members, eventKeys) {
     e.preventDefault();
     const form = e.target;
     const resultBox = form.querySelector('[data-rsvp-result]');
     const formData = new FormData(form);
     const submitBtn = form.querySelector('button[type="submit"]');
-    const yesNo = (v) => (v === 'yes' ? true : v === 'no' ? false : null);
+    const problems = [];
 
-    const responses = invited.map((key) => {
+    form.querySelectorAll('.missing').forEach((el) => el.classList.remove('missing'));
+
+    const responses = [];
+    eventKeys.forEach((key) => {
       const fields = events[key].fields || [];
-      const attending = formData.get(`attending__${key}`) === 'yes';
-      const kidsMeal = fields.includes('kidsMeal') ? yesNo(formData.get(`kidsMeal__${key}`)) : null;
-      return {
-        event_key: key,
-        attending,
-        meal_choice: attending ? formData.get(`mealChoice__${key}`) || null : null,
-        kosher_meal: attending && fields.includes('kosherMeal') ? yesNo(formData.get(`kosherMeal__${key}`)) : null,
-        kids_meal: attending ? kidsMeal : null,
-        kids_ages: attending && kidsMeal ? formData.get(`kidsAge__${key}`) || null : null,
-        notes: formData.get(`notes__${key}`) || null,
-      };
+      members
+        .filter((m) => m.events.includes(key))
+        .forEach((m) => {
+          const id = `${m.guest_id}__${key}`;
+          const answer = formData.get(`att__${id}`);
+          const row = form.querySelector(`[name="att__${id}"]`).closest('[data-person-row]');
+          if (!answer) {
+            row.classList.add('missing');
+            problems.push('everyone');
+            return;
+          }
+          const attending = answer === 'yes';
+          const meal = attending && fields.includes('mealChoice') ? formData.get(`meal__${id}`) || '' : '';
+          if (attending && fields.includes('mealChoice') && !meal) {
+            row.classList.add('missing');
+            problems.push('meal');
+          }
+          responses.push({
+            guest_id: m.guest_id,
+            event_key: key,
+            attending,
+            meal_choice: meal && meal !== 'kids' ? meal : null,
+            kids_meal: attending && fields.includes('mealChoice') ? meal === 'kids' : null,
+            kosher_meal: attending && fields.includes('kosherMeal') ? formData.get(`kosher__${id}`) === 'yes' : null,
+            plus_one_name: m.is_plus_one ? (formData.get(`plusName__${m.guest_id}`) || '').trim() || null : null,
+          });
+        });
     });
+
+    const email = (formData.get('rsvp_email') || '').trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) problems.push('email');
+
+    if (problems.length) {
+      const msgs = [];
+      if (problems.includes('everyone')) msgs.push('let us know yes or no for everyone at each event');
+      if (problems.includes('meal')) msgs.push('pick a meal for everyone attending');
+      if (problems.includes('email')) msgs.push('add a valid email');
+      resultBox.innerHTML = `<p class="rsvp-status err">Almost there! Please ${msgs.join(', and ')}.</p>`;
+      const first = form.querySelector('.missing');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     submitBtn.disabled = true;
     rpc('submit_rsvp', {
-      p_guest_id: guest.id,
-      p_email: formData.get('rsvp_email') || '',
+      p_household_id: match.household_id,
+      p_email: email,
+      p_notes: formData.get('rsvp_notes') || '',
       p_responses: responses,
     })
       .then(() => {
         resultBox.innerHTML =
-          '<p class="rsvp-status ok">You\'re all set, thank you for RSVPing! We can\'t wait to celebrate with you.</p>';
+          '<p class="rsvp-status ok">You\'re all set, thank you for RSVPing! We can\'t wait to celebrate with you. (Need to change something? Just search your name again and resubmit.)</p>';
       })
       .catch(() => {
         submitBtn.disabled = false;
