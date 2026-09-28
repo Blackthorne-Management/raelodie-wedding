@@ -38,7 +38,7 @@ Search the site for `[TO ADD]`, `[TBD]`, `[XX]`, or the dashed orange "placehold
 - **Room block / group booking link and code** for The Grove Resort — call 407-734-0609 or email Sales@groveresortorlando.com.
 - **Parking rate per night** at The Grove.
 - **Wedding party names, roles, photos, and contact info** — `dream-team.html`.
-- **Real photos** for the homepage and `gallery.html` — currently placeholder tiles.
+- **Real photos** for the homepage — currently placeholder tiles (the gallery page has real photos).
 - **Full weekend schedule** beyond Welcome Reception + Wedding Ceremony & Reception (rehearsal dinner, bachelor/bachelorette, ring benediction, kosher brunch times/locations) — update `data/events.json`.
 
 ## Guest list & RSVP
