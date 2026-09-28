@@ -28,19 +28,6 @@
   </nav>
 </header>
 
-<!--
-  Hidden static form so Netlify's build bot registers the "rsvp" form
-  and its fields (Netlify Forms needs a plain HTML form present at
-  deploy time. The real, dynamic form is rendered by js/rsvp.js and
-  POSTs to this same form name).
--->
-<form name="rsvp" data-netlify="true" netlify-honeypot="bot-field" hidden>
-  <input type="text" name="guest_name" />
-  <input type="email" name="rsvp_email" />
-  <textarea name="rsvp_details"></textarea>
-  <input type="text" name="bot-field" />
-</form>
-
 <main>
 
   <section class="hero" style="padding-bottom:20px;">

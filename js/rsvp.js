@@ -1,6 +1,26 @@
-// RSVP page logic: name lookup -> per-event dynamic form -> Netlify Forms submit.
-// Guest list lives in data/guests.json (name -> array of event keys).
+// RSVP page logic: name lookup -> per-event dynamic form -> Supabase submit.
+// Guest list + RSVPs live in Supabase (Blackthorne-Management org). The public
+// key below can only call the search_guests / get_guest_events / submit_rsvp
+// functions; the tables themselves are not readable from the site.
 // Event definitions live in data/events.json (per-event display + which fields to ask for).
+
+const SUPABASE_URL = 'https://mawdkpwegsjmdqoagevi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VkEwuc8kY7nmpDaoZoWWkw_Fi0m3FqC';
+
+function rpc(fn, args) {
+  return fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  }).then((r) => {
+    if (!r.ok) throw new Error(`${fn} failed (${r.status})`);
+    return r.status === 204 ? null : r.json();
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.querySelector('[data-guest-search]');
@@ -9,53 +29,65 @@ document.addEventListener('DOMContentLoaded', () => {
   const notFound = document.querySelector('[data-guest-not-found]');
   if (!searchInput || !formArea) return;
 
-  let guests = [];
+  let matches = [];
   let events = {};
-  let activeGuest = null;
+  let searchTimer = null;
+  let searchSeq = 0;
 
-  Promise.all([
-    fetch('data/guests.json').then((r) => r.json()),
-    fetch('data/events.json').then((r) => r.json()),
-  ])
-    .then(([guestData, eventData]) => {
-      guests = guestData;
+  fetch('data/events.json')
+    .then((r) => r.json())
+    .then((eventData) => {
       events = eventData;
     })
     .catch(() => {
       formArea.innerHTML =
-        '<p class="rsvp-status err">We could not load the guest list right now. Please refresh, or reach out to the couple directly.</p>';
+        '<p class="rsvp-status err">We could not load the event details right now. Please refresh, or reach out to the couple directly.</p>';
     });
 
   searchInput.addEventListener('input', () => {
-    const q = searchInput.value.trim().toLowerCase();
+    const q = searchInput.value.trim();
     formArea.innerHTML = '';
     notFound.hidden = true;
-    activeGuest = null;
+    clearTimeout(searchTimer);
 
-    if (q.length < 2) {
+    if (q.length < 3) {
       suggestionsBox.hidden = true;
       suggestionsBox.innerHTML = '';
       return;
     }
 
-    const matches = guests.filter((g) => g.name.toLowerCase().includes(q)).slice(0, 6);
-
-    if (!matches.length) {
-      suggestionsBox.hidden = true;
-      suggestionsBox.innerHTML = '';
-      return;
-    }
-
-    suggestionsBox.innerHTML = matches
-      .map((g, i) => `<button type="button" data-idx="${guests.indexOf(g)}">${g.name}</button>`)
-      .join('');
-    suggestionsBox.hidden = false;
+    searchTimer = setTimeout(() => runSearch(q), 250);
   });
+
+  function runSearch(q) {
+    const seq = ++searchSeq;
+    rpc('search_guests', { q })
+      .then((results) => {
+        if (seq !== searchSeq) return; // a newer keystroke already fired
+        matches = results || [];
+        if (!matches.length) {
+          suggestionsBox.hidden = true;
+          suggestionsBox.innerHTML = '';
+          notFound.hidden = q.length < 5;
+          return;
+        }
+        suggestionsBox.innerHTML = matches
+          .map((g, i) => `<button type="button" data-idx="${i}">${escapeHtml(g.name)}</button>`)
+          .join('');
+        suggestionsBox.hidden = false;
+      })
+      .catch(() => {
+        if (seq !== searchSeq) return;
+        suggestionsBox.hidden = true;
+        formArea.innerHTML =
+          '<p class="rsvp-status err">We could not reach the guest list right now. Please try again in a moment.</p>';
+      });
+  }
 
   suggestionsBox.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-idx]');
     if (!btn) return;
-    const guest = guests[Number(btn.dataset.idx)];
+    const guest = matches[Number(btn.dataset.idx)];
     selectGuest(guest);
   });
 
@@ -66,12 +98,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function selectGuest(guest) {
-    activeGuest = guest;
     searchInput.value = guest.name;
     suggestionsBox.hidden = true;
     notFound.hidden = true;
+    formArea.innerHTML = '<p class="lede center">Looking up your invitation…</p>';
 
-    const invited = (guest.events || []).filter((key) => events[key]);
+    rpc('get_guest_events', { p_guest_id: guest.id })
+      .then((guestEvents) => renderForm(guest, guestEvents || []))
+      .catch(() => {
+        formArea.innerHTML =
+          '<p class="rsvp-status err">We could not load your invitation right now. Please refresh and try again.</p>';
+      });
+  }
+
+  function renderForm(guest, guestEvents) {
+    const invited = guestEvents.filter((key) => events[key]);
 
     if (!invited.length) {
       formArea.innerHTML =
@@ -81,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formArea.innerHTML = `
       <form data-rsvp-form>
-        <p class="lede center">Hi ${guest.name}! Here's what you're invited to. Let us know if you'll be there.</p>
+        <p class="lede center">Hi ${escapeHtml(guest.name)}! Here's what you're invited to. Let us know if you'll be there.</p>
         ${invited.map((key) => renderEventCard(key, events[key])).join('')}
         <div class="field">
           <label for="rsvp-email">Your email (so we can reach you with any updates)</label>
@@ -200,36 +241,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = e.target;
     const resultBox = form.querySelector('[data-rsvp-result]');
     const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const yesNo = (v) => (v === 'yes' ? true : v === 'no' ? false : null);
 
-    const summaryLines = [`Guest: ${guest.name}`];
-    invited.forEach((key) => {
-      const title = events[key].title;
-      const attending = formData.get(`attending__${key}`) || 'no response';
-      summaryLines.push(`- ${title}: ${attending}`);
-      (events[key].fields || []).forEach((f) => {
-        const val = formData.get(`${f}__${key}`);
-        if (val) summaryLines.push(`    ${f}: ${val}`);
-      });
+    const responses = invited.map((key) => {
+      const fields = events[key].fields || [];
+      const attending = formData.get(`attending__${key}`) === 'yes';
+      const kidsMeal = fields.includes('kidsMeal') ? yesNo(formData.get(`kidsMeal__${key}`)) : null;
+      return {
+        event_key: key,
+        attending,
+        meal_choice: attending ? formData.get(`mealChoice__${key}`) || null : null,
+        kosher_meal: attending && fields.includes('kosherMeal') ? yesNo(formData.get(`kosherMeal__${key}`)) : null,
+        kids_meal: attending ? kidsMeal : null,
+        kids_ages: attending && kidsMeal ? formData.get(`kidsAge__${key}`) || null : null,
+        notes: formData.get(`notes__${key}`) || null,
+      };
     });
 
-    const payload = new URLSearchParams();
-    payload.set('form-name', 'rsvp');
-    payload.set('guest_name', guest.name);
-    payload.set('rsvp_email', formData.get('rsvp_email') || '');
-    payload.set('rsvp_details', summaryLines.join('\n'));
-    payload.set('bot-field', '');
-
-    fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: payload.toString(),
+    submitBtn.disabled = true;
+    rpc('submit_rsvp', {
+      p_guest_id: guest.id,
+      p_email: formData.get('rsvp_email') || '',
+      p_responses: responses,
     })
       .then(() => {
         resultBox.innerHTML =
           '<p class="rsvp-status ok">You\'re all set, thank you for RSVPing! We can\'t wait to celebrate with you.</p>';
-        form.querySelector('button[type="submit"]').disabled = true;
       })
       .catch(() => {
+        submitBtn.disabled = false;
         resultBox.innerHTML =
           '<p class="rsvp-status err">Something went wrong sending that. Please try again, or email the couple directly.</p>';
       });

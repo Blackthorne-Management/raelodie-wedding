@@ -11,15 +11,14 @@ things-to-do.html      Activities, restaurants, family stuff, synagogues
 dream-team.html        Wedding party
 faq.html                Q&A
 gallery.html            "Our Journey in Pics" animated photo gallery
-rsvp.html                Name lookup + per-event RSVP form (Netlify Forms)
+rsvp.html                Name lookup + per-event RSVP form (Supabase)
 registry.html            Zola registry link
 
 css/style.css           All styling (colors, fonts, layout)
 js/main.js               Nav toggle, countdown timer, gallery scroll-reveal
-js/rsvp.js                RSVP name lookup + dynamic form + submission
+js/rsvp.js                RSVP name lookup + dynamic form + submission (Supabase URL + public key at top)
 
 data/events.json          Event details (date, dress code, which form fields to ask)
-data/guests.json           Guest list -> which events each guest is invited to
 
 design-reference/          Your original mood board / inspiration screenshots (not part of the live site)
 images/gallery/             Drop real "Our Journey" photos here
@@ -39,22 +38,20 @@ Search the site for `[TO ADD]`, `[TBD]`, `[XX]`, or the dashed orange "placehold
 
 ## Guest list & RSVP
 
-`data/guests.json` is the source of truth for who's invited to what. Each entry:
+The guest list and RSVPs live in Supabase (Blackthorne-Management's Org → project `mawdkpwegsjmdqoagevi`), not in this repo, so the invite list isn't publicly downloadable.
 
-```json
-{ "name": "Full Name", "events": ["welcome-reception", "wedding-reception"] }
-```
+- **`guests`** — who's invited to what. Add/edit rows in the Supabase Table Editor. `name` is what guests type to find themselves; `events` is a list of event keys, e.g. `{welcome-reception,wedding-reception}`. Keys must match `data/events.json`. Currently only 3 demo guests (Elodie, Rael, sample guest "Karla Colley") — **replace with the real guest list** before sharing the site.
+- **`rsvps`** — one row per guest per event. Resubmitting updates the existing row instead of duplicating.
+- **`rsvp_overview`** — every invite with its response (`yes` / `no` / `no response`), meal choice, notes, etc. Use this view for headcounts; export to CSV from the Table Editor.
 
-Event keys must match the keys in `data/events.json`. Currently only 3 demo guests are in the file (Elodie, Rael, and a sample guest "Karla Colley") — **replace this with your real guest list** before sharing the site.
-
-RSVP submissions are collected via [Netlify Forms](https://docs.netlify.com/manage/forms/setup/) — no backend needed, but the form only works once the site is deployed on Netlify (it won't capture submissions when opened locally as a file). Responses show up in your Netlify site dashboard under **Forms**, and can be set to email you on each new submission (Site settings → Forms → Form notifications).
+The site's public key can only call three database functions (`search_guests`, `get_guest_events`, `submit_rsvp`); it can't read the tables. Name search needs at least 3 characters and returns at most 6 matches. RSVPs work locally too, as long as the page is served over http (not opened as a file).
 
 ## Deploying
 
 1. Push this folder to a GitHub repo.
 2. In Netlify: **Add new site → Import an existing project → GitHub**, pick the repo.
 3. Build command: leave blank. Publish directory: `.` (repo root).
-4. Deploy. Netlify will auto-detect the `rsvp` form on first deploy.
+4. Deploy. (No Netlify Forms setup needed — RSVPs go to Supabase.)
 5. Point your domain (`www.rodezvous.com`) at the Netlify site under **Domain management**.
 
 ## Fonts & palette
