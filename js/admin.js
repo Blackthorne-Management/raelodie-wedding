@@ -3,7 +3,7 @@
 // Access is enforced in the database: only users in public.admin_users can read RSVPs.
 
 const ADMIN_ACCOUNTS = {
-  raelodie: 'raelodie@rodezvous.com',
+  raelodie: 'raelodiehome@gmail.com',
 };
 
 const MEAL_LABELS = {

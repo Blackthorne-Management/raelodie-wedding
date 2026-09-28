@@ -52,7 +52,7 @@ The site's public key can only call three database functions (`search_guests`, `
 
 ### Admin page & email alerts
 
-`/admin.html` shows totals per event (yes / no / waiting, meal counts, kosher, kids' meals), the full RSVP list, and a CSV download. Sign-in uses Supabase Auth: the username `Raelodie` maps to the account `raelodie@rodezvous.com` (see `ADMIN_ACCOUNTS` in `js/admin.js`), and only accounts listed in the `admin_users` table can read RSVPs.
+`/admin.html` shows totals per event (yes / no / waiting, meal counts, kosher, kids' meals), the full RSVP list, and a CSV download. Sign-in uses Supabase Auth: the username `Raelodie` maps to the account `raelodiehome@gmail.com` (see `ADMIN_ACCOUNTS` in `js/admin.js`), and only accounts listed in the `admin_users` table can read RSVPs.
 
 Each RSVP calls the `rsvp-notify` Edge Function, which emails a summary. It stays silent until these Edge Function secrets are set in Supabase: `RESEND_API_KEY` (from resend.com) and `NOTIFY_EMAIL` (where alerts go).
 
