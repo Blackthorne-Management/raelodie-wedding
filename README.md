@@ -10,13 +10,14 @@ travel.html            Hotel booking, flights, rideshare, parking
 things-to-do.html      Activities, restaurants, family stuff, synagogues
 dream-team.html        Wedding party
 faq.html                Q&A
-gallery.html            "Our Journey in Pics" animated photo gallery
+gallery.html            "Our Journey in Pics": rotating slideshow + photo grid
 rsvp.html                Name lookup + per-event RSVP form (Supabase)
 registry.html            Zola registry link
 admin.html               RSVP admin: totals per event, full list, CSV download (not linked from the site)
 
 css/style.css           All styling (colors, fonts, layout)
 js/main.js               Nav toggle, countdown timer, gallery scroll-reveal
+js/gallery.js            Photo slideshow on gallery.html
 js/rsvp.js                RSVP name lookup + dynamic form + submission
 js/admin.js               Admin sign-in + RSVP dashboard
 js/supabase-config.js     Supabase URL + public key (shared by both)
@@ -25,7 +26,7 @@ supabase/functions/       rsvp-notify: emails an alert on each RSVP (deployed to
 data/events.json          Event details (date, dress code, which form fields to ask)
 
 design-reference/          Your original mood board / inspiration screenshots (not part of the live site)
-images/gallery/             Drop real "Our Journey" photos here
+images/gallery/             "Our Journey" photos (full/ + thumb/, see its README)
 images/team/                 Drop wedding party photos here
 ```
 
