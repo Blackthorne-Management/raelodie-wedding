@@ -13,10 +13,14 @@ faq.html                Q&A
 gallery.html            "Our Journey in Pics" animated photo gallery
 rsvp.html                Name lookup + per-event RSVP form (Supabase)
 registry.html            Zola registry link
+admin.html               RSVP admin: totals per event, full list, CSV download (not linked from the site)
 
 css/style.css           All styling (colors, fonts, layout)
 js/main.js               Nav toggle, countdown timer, gallery scroll-reveal
-js/rsvp.js                RSVP name lookup + dynamic form + submission (Supabase URL + public key at top)
+js/rsvp.js                RSVP name lookup + dynamic form + submission
+js/admin.js               Admin sign-in + RSVP dashboard
+js/supabase-config.js     Supabase URL + public key (shared by both)
+supabase/functions/       rsvp-notify: emails an alert on each RSVP (deployed to Supabase)
 
 data/events.json          Event details (date, dress code, which form fields to ask)
 
@@ -45,6 +49,12 @@ The guest list and RSVPs live in Supabase (Blackthorne-Management's Org → proj
 - **`rsvp_overview`** — every invite with its response (`yes` / `no` / `no response`), meal choice, notes, etc. Use this view for headcounts; export to CSV from the Table Editor.
 
 The site's public key can only call three database functions (`search_guests`, `get_guest_events`, `submit_rsvp`); it can't read the tables. Name search needs at least 3 characters and returns at most 6 matches. RSVPs work locally too, as long as the page is served over http (not opened as a file).
+
+### Admin page & email alerts
+
+`/admin.html` shows totals per event (yes / no / waiting, meal counts, kosher, kids' meals), the full RSVP list, and a CSV download. Sign-in uses Supabase Auth: the username `Raelodie` maps to the account `raelodie@rodezvous.com` (see `ADMIN_ACCOUNTS` in `js/admin.js`), and only accounts listed in the `admin_users` table can read RSVPs.
+
+Each RSVP calls the `rsvp-notify` Edge Function, which emails a summary. It stays silent until these Edge Function secrets are set in Supabase: `RESEND_API_KEY` (from resend.com) and `NOTIFY_EMAIL` (where alerts go).
 
 ## Deploying
 

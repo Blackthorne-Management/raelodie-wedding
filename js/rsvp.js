@@ -1,11 +1,8 @@
 // RSVP page logic: name lookup -> per-event dynamic form -> Supabase submit.
-// Guest list + RSVPs live in Supabase (Blackthorne-Management org). The public
-// key below can only call the search_guests / get_guest_events / submit_rsvp
+// Guest list + RSVPs live in Supabase (see js/supabase-config.js). The public
+// key can only call the search_guests / get_guest_events / submit_rsvp
 // functions; the tables themselves are not readable from the site.
 // Event definitions live in data/events.json (per-event display + which fields to ask for).
-
-const SUPABASE_URL = 'https://mawdkpwegsjmdqoagevi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_VkEwuc8kY7nmpDaoZoWWkw_Fi0m3FqC';
 
 function rpc(fn, args) {
   return fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {

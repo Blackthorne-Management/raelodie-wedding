@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>RSVP Admin | Ro · dez · vous</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Mea+Culpa&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav wrap">
+    <a class="brand" href="index.html">Ro · dez · vous</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero" style="padding-bottom:20px;">
+    <div class="wrap">
+      <span class="script-lg">For the couple</span>
+      <h1>RSVPs</h1>
+    </div>
+  </section>
+
+  <section class="band-cream" style="padding-top:0;">
+    <div class="wrap">
+
+      <form class="admin-login event-card" data-admin-login hidden>
+        <div class="field">
+          <label for="admin-user">Username</label>
+          <input type="text" id="admin-user" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="admin-pass">Password</label>
+          <input type="password" id="admin-pass" autocomplete="current-password" required>
+        </div>
+        <div class="center">
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
+        <div data-login-result></div>
+      </form>
+
+      <div data-admin-dashboard hidden>
+        <div class="admin-toolbar">
+          <label for="admin-event">Event</label>
+          <select id="admin-event" data-event-filter></select>
+          <button type="button" class="btn btn-outline" data-download-csv>Download CSV</button>
+          <button type="button" class="btn btn-outline" data-refresh>Refresh</button>
+          <button type="button" class="btn btn-outline" data-sign-out>Sign out</button>
+        </div>
+
+        <div class="admin-totals" data-totals></div>
+
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Guest</th><th>Event</th><th>Response</th><th>Meal</th><th>Kosher</th>
+                <th>Kids' meal</th><th>Notes</th><th>Email</th><th>Updated</th>
+              </tr>
+            </thead>
+            <tbody data-rows></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div data-admin-status></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
